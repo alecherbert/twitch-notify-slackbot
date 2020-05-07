@@ -27,6 +27,23 @@ SLACK_HEADER = {
 app = Flask(__name__)
 db = SqliteDatabase('following.db')
 
+def main():
+    missing_env_var = False
+    for env_var in ENV_VAR_STRINGS:
+        if env_var not in os.environ:
+            print(f"Environment variable '{env_var}' not found!")
+            missing_env_var = True
+    if missing_env_var:
+        print("Exiting!")
+        exit()
+
+    global SLACK_WEBHOOK
+    SLACK_WEBHOOK = os.environ['SLACK_WEBHOOK']
+
+    subscribe_refresh = threading.Thread(target=subscription_handler, daemon=True)
+    subscribe_refresh.start()
+    app.run(host='0.0.0.0', port=5000)
+
 
 @app.route('/twitchbot', methods=['POST'])
 def user_update():
@@ -80,19 +97,4 @@ def subscription_handler():
         time.sleep(SUBSCRIPTION_TIME - 120)
 
 if __name__ == '__main__':
-    missing_env_var = False
-    for env_var in ENV_VAR_STRINGS:
-        if env_var not in os.environ:
-            print(f"Environment variable '{env_var}' not found!")
-            missing_env_var = True
-    if missing_env_var:
-        print("Exiting!")
-        exit()
-
-    global SLACK_WEBHOOK
-    SLACK_WEBHOOK = os.environ['SLACK_WEBHOOK']
-
-    subscribe_refresh = threading.Thread(target=subscription_handler, daemon=True)
-    subscribe_refresh.start()
-    app.run(host='0.0.0.0', port=5000)
-
+    main()
