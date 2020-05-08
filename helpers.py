@@ -4,7 +4,7 @@ import os
 
 def get_game(game_id):
     if not game_id:
-        return "unknown game"
+        return { 'name': '_unknown game_' }
     params = { 'id': game_id }
     r = requests.get('https://api.twitch.tv/helix/games', headers={ 'Client-ID': CLIENT_ID }, params=params)
     pp.pprint(r.json())
