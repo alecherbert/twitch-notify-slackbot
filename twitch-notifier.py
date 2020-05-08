@@ -88,7 +88,6 @@ def after_request(response):
     return response
 
 def subscription_handler():
-    subscribe.api_setup()
     subscribe.prepare()
     while(True):
         print("resubscribing to all")
