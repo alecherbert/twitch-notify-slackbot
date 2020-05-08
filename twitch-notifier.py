@@ -55,7 +55,7 @@ def user_update():
             user = User.get(User.user_id == int(user_id))
             user.last_live = int(time.time())
             user.save()
-            print(f'{user.display_name.capitalize} is live!')
+            print(f'{user.display_name.capitalize()} is live!')
             stream = make_stream(data)
             message = make_message(user, stream)
             message_json = json.dumps(message)
