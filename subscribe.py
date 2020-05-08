@@ -41,6 +41,7 @@ def api_setup():
         'client_secret': CLIENT_SECRET,
         'grant_type': 'client_credentials'
     }
+    print(params)
     r = requests.post('https://id.twitch.tv/oauth2/token', params=params)
 
     pp.pprint(r.json())
