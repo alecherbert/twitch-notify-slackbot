@@ -4,6 +4,7 @@ import os
 import pprint as pp
 from peewee import SqliteDatabase
 from User import User
+from helpers import api_setup
 
 CLIENT_SECRET = None
 CLIENT_ID = None
@@ -33,25 +34,6 @@ def prepare():
     for username in TWITCH_NAMES:
         info = get_user_info(username)
         update_or_create(*info)
-
-
-def api_setup():
-    params = {
-        'client_id': CLIENT_ID,
-        'client_secret': CLIENT_SECRET,
-        'grant_type': 'client_credentials'
-    }
-    print(params)
-    r = requests.post('https://id.twitch.tv/oauth2/token', params=params)
-
-    pp.pprint(r.json())
-    app_token = r.json()['access_token']
-    print(app_token)
-    header = { 'Client-ID': CLIENT_ID, 'Authorization': f'Bearer {app_token}' }
-
-    time.sleep(0.5)
-    r = requests.get('https://api.twitch.tv/helix/webhooks/subscriptions', headers=header)
-
 
 def new_sub(user_id):
     print(user_id)

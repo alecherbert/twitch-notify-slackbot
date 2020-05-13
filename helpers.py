@@ -2,11 +2,36 @@ import requests
 import pprint as pp
 import os
 
+
+
+def api_setup():
+    global CLIENT_ID
+    CLIENT_ID = os.environ['CLIENT_ID']
+    global CLIENT_SECRET
+    CLIENT_SECRET = os.environ['CLIENT_SECRET']
+    params = {
+        'client_id': CLIENT_ID,
+        'client_secret': CLIENT_SECRET,
+        'grant_type': 'client_credentials'
+    }
+    print(params)
+    r = requests.post('https://id.twitch.tv/oauth2/token', params=params)
+
+    pp.pprint(r.json())
+    app_token = r.json()['access_token']
+    global APP_TOKEN
+    APP_TOKEN = app_token
+    print(app_token)
+    header = { 'Client-ID': CLIENT_ID, 'Authorization': f'Bearer {APP_TOKEN}' }
+
+    r = requests.get('https://api.twitch.tv/helix/webhooks/subscriptions', headers=header)
+
 def get_game(game_id):
     if not game_id:
         return { 'name': '_unknown game_' }
     params = { 'id': game_id }
-    r = requests.get('https://api.twitch.tv/helix/games', headers={ 'Client-ID': CLIENT_ID }, params=params)
+    header = { 'Client-ID': CLIENT_ID, 'Authorization': f'Bearer {APP_TOKEN}' }
+    r = requests.get('https://api.twitch.tv/helix/games', headers=header, params=params)
     pp.pprint(r.json())
     
     game = r.json()['data'][0]
