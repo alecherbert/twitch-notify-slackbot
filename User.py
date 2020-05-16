@@ -9,6 +9,7 @@ class User(pw.Model):
     profile_image = pw.CharField()
     last_subscribed = pw.TimestampField(null=True,default=None)
     last_live = pw.TimestampField(null=True,default=None)
+    broadcaster_type = pw.CharField(default='')
 
     class Meta:
         database = db

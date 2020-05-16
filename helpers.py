@@ -1,37 +1,18 @@
 import requests
 import pprint as pp
 import os
+from Store import Store
 
-
-
-def api_setup():
-    global CLIENT_ID
-    CLIENT_ID = os.environ['CLIENT_ID']
-    global CLIENT_SECRET
-    CLIENT_SECRET = os.environ['CLIENT_SECRET']
-    params = {
-        'client_id': CLIENT_ID,
-        'client_secret': CLIENT_SECRET,
-        'grant_type': 'client_credentials'
-    }
-    print(params)
-    r = requests.post('https://id.twitch.tv/oauth2/token', params=params)
-
-    pp.pprint(r.json())
-    app_token = r.json()['access_token']
-    global APP_TOKEN
-    APP_TOKEN = app_token
-    print(app_token)
-    header = { 'Client-ID': CLIENT_ID, 'Authorization': f'Bearer {APP_TOKEN}' }
-
-    r = requests.get('https://api.twitch.tv/helix/webhooks/subscriptions', headers=header)
 
 def get_game(game_id):
     if not game_id:
         return { 'name': '_unknown game_' }
     params = { 'id': game_id }
-    header = { 'Client-ID': CLIENT_ID, 'Authorization': f'Bearer {APP_TOKEN}' }
-    r = requests.get('https://api.twitch.tv/helix/games', headers=header, params=params)
+    r = requests.get(
+        'https://api.twitch.tv/helix/games', 
+        headers=Store.default_header, 
+        params=params
+    )
     pp.pprint(r.json())
     
     game = r.json()['data'][0]
@@ -43,13 +24,21 @@ def get_tags(tag_ids, locale="en-us"): # unused
         'tag_id': "&".join(tag_ids),
         'first': tag_count
     }
-    r = requests.get('https://api.twitch.tv/helix/tags/streams', headers={ 'Client-ID': CLIENT_ID }, params=params)
+    r = requests.get(
+        'https://api.twitch.tv/helix/tags/streams',
+        headers=Store.default_header,
+        params=params
+    )
     pp.pprint(r.json())
     return ["tag1", "tag2"]
 
 def get_stream_tags(broadcaster_id, locale="en-us"): # unused
     params = { 'broadcaster_id': broadcaster_id }
-    r = requests.get('https://api.twitch.tv/helix/streams/tags', headers={ 'Client-ID': CLIENT_ID }, params=params)
+    r = requests.get(
+        'https://api.twitch.tv/helix/streams/tags', 
+        headers=Store.default_header, 
+        params=params
+    )
     data = r.json()['data']
     pp.pprint(data)
     if data:
@@ -61,8 +50,6 @@ def size_image(url, width, height):
     return url.replace('{width}', str(width)).replace('{height}', str(height))
 
 def make_stream(data):
-    global CLIENT_ID
-    CLIENT_ID = os.environ['CLIENT_ID']
     print(data.keys())
     stream = {}
     stream['title'] = data['title']
@@ -101,13 +88,18 @@ def make_message_legacy(the_color='#ff8000'): # unused
     }
 
 def make_message(user, stream):
+    badge = ''
+    if user.broadcaster_type == 'affiliate':
+        badge = '  :star:'
+    elif user.broadcaster_type == 'partner':
+        badge = '  :star2:'
     return  {
                 "blocks": [
                     {
                         "type": "section",
                         "text": {
                             "type": "mrkdwn",
-                            "text": f"*{user.display_name}* is LIVE!"
+                            "text": f"*{user.display_name}* is LIVE!{badge}"
                         }
                     },
                     {
