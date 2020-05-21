@@ -42,17 +42,23 @@ def user_update():
         if data['type'] == 'live':
             user_id = data['user_id']
             user = User.get(User.user_id == int(user_id))
-            user.last_live = int(time.time())
+            curr_time = int(time.time())
+            time_diff = curr_time - user.last_live
+            user.last_live = curr_time
             user.save()
             print(f'{user.display_name.capitalize()} is live!')
-            stream = make_stream(data)
-            message = make_message(user, stream)
-            r = req.post(
-                Store.slack_webhook, 
-                headers={ 'Content-type': 'application/json' }, 
-                data=json.dumps(message)
-            )
-            print(r)
+            if time_diff < 30*60:
+                stream = make_stream(data)
+                message = make_message(user, stream)
+                r = req.post(
+                    Store.slack_webhook,
+                    headers={ 'Content-type': 'application/json' },
+                    data=json.dumps(message)
+                )
+                print(r)
+            else:
+                print(f'{user.display_name.capitalize()} went live recently, not sending message')
+
     else:
         print('Empty Data - Stream ended')
     return jsonify(success=True)
