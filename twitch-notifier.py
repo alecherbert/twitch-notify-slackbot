@@ -43,22 +43,17 @@ def user_update():
             user_id = data['user_id']
             user = User.get(User.user_id == int(user_id))
             curr_time = int(time.time())
-            time_diff = curr_time - user.last_live
+            last_live = user.last_live
             user.last_live = curr_time
             user.save()
             print(f'{user.display_name.capitalize()} is live!')
-            if time_diff < 30*60:
-                stream = make_stream(data)
-                message = make_message(user, stream)
-                r = req.post(
-                    Store.slack_webhook,
-                    headers={ 'Content-type': 'application/json' },
-                    data=json.dumps(message)
-                )
-                print(r)
+            if last_live is None:
+                send_to_slack(data, user)
             else:
-                print(f'{user.display_name.capitalize()} went live recently, not sending message')
-
+                if (curr_time - last_live) < 30*60:
+                    print(f'{user.display_name.capitalize()} went live recently, not sending message')
+                else:
+                    send_to_slack(data, user)
     else:
         print('Empty Data - Stream ended')
     return jsonify(success=True)
@@ -84,6 +79,16 @@ def before_request():
 def after_request(response):
     db.close()
     return response
+
+def send_to_slack(data, user):
+    stream = make_stream(data)
+    message = make_message(user, stream)
+    r = req.post(
+        Store.slack_webhook,
+        headers={ 'Content-type': 'application/json' },
+        data=json.dumps(message)
+    )
+    print(r)
 
 def subscription_handler():
     subscribe.prepare()
