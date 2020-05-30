@@ -50,6 +50,7 @@ def user_update():
             if last_live is None:
                 send_to_slack(data, user)
             else:
+                last_live = int(last_live.timestamp())
                 if (curr_time - last_live) < 30*60:
                     print(f'{user.display_name.capitalize()} went live recently, not sending message')
                 else:
